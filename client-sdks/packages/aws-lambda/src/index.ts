@@ -418,18 +418,38 @@ export const LambdaRedisUtils = {
   getQueryParams(event: APIGatewayProxyEvent | APIGatewayProxyEventV2): Record<string, string> {
     // API Gateway v2 format
     if ('queryStringParameters' in event && event.queryStringParameters) {
-      return event.queryStringParameters;
+      const params: Record<string, string> = {};
+      Object.entries(event.queryStringParameters).forEach(([key, value]) => {
+        if (value !== undefined) {
+          params[key] = value;
+        }
+      });
+      return params;
     }
     
     // API Gateway v1 format
-    return (event as APIGatewayProxyEvent).queryStringParameters || {};
+    const v1Params = (event as APIGatewayProxyEvent).queryStringParameters || {};
+    const params: Record<string, string> = {};
+    Object.entries(v1Params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        params[key] = value;
+      }
+    });
+    return params;
   },
 
   /**
    * Get path parameters from API Gateway event
    */
   getPathParams(event: APIGatewayProxyEvent | APIGatewayProxyEventV2): Record<string, string> {
-    return event.pathParameters || {};
+    const pathParams = event.pathParameters || {};
+    const params: Record<string, string> = {};
+    Object.entries(pathParams).forEach(([key, value]) => {
+      if (value !== undefined) {
+        params[key] = value;
+      }
+    });
+    return params;
   },
 };
 

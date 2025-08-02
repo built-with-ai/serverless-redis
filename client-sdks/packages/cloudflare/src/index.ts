@@ -5,6 +5,91 @@
 import { ServerlessRedis, type ServerlessRedisConfig } from '@builtwithai/serverless-redis-client';
 
 /**
+ * Cloudflare Workers types (declare globally if not available)
+ */
+declare global {
+  interface KVNamespace {
+    get(key: string, options?: { type?: 'text' | 'json' | 'arrayBuffer' | 'stream' }): Promise<any>;
+    put(key: string, value: string | ArrayBuffer | ArrayBufferView | ReadableStream, options?: any): Promise<void>;
+    delete(key: string): Promise<void>;
+    list(options?: any): Promise<any>;
+  }
+
+  interface D1Database {
+    prepare(query: string): D1PreparedStatement;
+    dump(): Promise<ArrayBuffer>;
+    batch<T = unknown>(statements: D1PreparedStatement[]): Promise<D1Result<T>[]>;
+    exec<T = unknown>(query: string): Promise<D1Result<T>>;
+  }
+
+  interface D1PreparedStatement {
+    bind(...values: any[]): D1PreparedStatement;
+    first<T = unknown>(colName?: string): Promise<T>;
+    run<T = unknown>(): Promise<D1Result<T>>;
+    all<T = unknown>(): Promise<D1Result<T>>;
+    raw<T = unknown>(): Promise<T[]>;
+  }
+
+  interface D1Result<T = unknown> {
+    results?: T[];
+    success: boolean;
+    error?: string;
+    meta: any;
+  }
+
+  interface R2Bucket {
+    get(key: string, options?: any): Promise<R2Object | null>;
+    put(key: string, value: any, options?: any): Promise<R2Object>;
+    delete(key: string | string[]): Promise<void>;
+    list(options?: any): Promise<R2Objects>;
+  }
+
+  interface R2Object {
+    key: string;
+    version: string;
+    size: number;
+    etag: string;
+    httpEtag: string;
+    uploaded: Date;
+    httpMetadata?: any;
+    customMetadata?: Record<string, string>;
+    range?: any;
+    body: R2ObjectBody;
+  }
+
+  interface R2ObjectBody extends ReadableStream {
+    readonly body: ReadableStream;
+    readonly bodyUsed: boolean;
+    arrayBuffer(): Promise<ArrayBuffer>;
+    text(): Promise<string>;
+    json<T>(): Promise<T>;
+    blob(): Promise<Blob>;
+  }
+
+  interface R2Objects {
+    objects: R2Object[];
+    truncated: boolean;
+    cursor?: string;
+  }
+
+  interface DurableObjectNamespace {
+    get(id: any): DurableObject;
+    idFromName(name: string): any;
+    idFromString(id: string): any;
+    newUniqueId(): any;
+  }
+
+  interface DurableObject {
+    fetch(request: Request): Promise<Response>;
+  }
+
+  interface ExecutionContext {
+    waitUntil(promise: Promise<any>): void;
+    passThroughOnException(): void;
+  }
+}
+
+/**
  * Cloudflare Workers specific configuration
  */
 export interface CloudflareRedisConfig extends Omit<ServerlessRedisConfig, 'url' | 'token'> {
@@ -232,7 +317,8 @@ export class CloudflareRedis extends ServerlessRedis {
       }
 
       // Retrieve from R2
-      return await this.env.R2.get(metadata.key);
+      const r2Object = await this.env.R2.get(metadata.key);
+      return r2Object?.body || null;
     } catch {
       return null;
     }

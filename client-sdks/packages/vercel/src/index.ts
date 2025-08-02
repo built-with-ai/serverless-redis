@@ -5,6 +5,13 @@
 import { ServerlessRedis, type ServerlessRedisConfig } from '@builtwithai/serverless-redis-client';
 
 /**
+ * Vercel Edge Runtime types (declare globally if not available)
+ */
+declare global {
+  const EdgeRuntime: string | undefined;
+}
+
+/**
  * Vercel Edge Functions specific configuration
  */
 export interface VercelRedisConfig extends Omit<ServerlessRedisConfig, 'url' | 'token'> {
