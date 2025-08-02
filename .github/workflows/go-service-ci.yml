@@ -356,6 +356,8 @@ jobs:
       - name: Create GitHub release
         if: steps.release-check.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           tag_name: ${{ steps.release-check.outputs.new_tag }}
           name: Serverless Redis ${{ steps.release-check.outputs.new_tag }}
