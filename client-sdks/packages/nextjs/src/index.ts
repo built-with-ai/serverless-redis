@@ -36,7 +36,7 @@ export function createServerlessRedis(config: NextRedisConfig = {}): ServerlessR
   // Auto-detect configuration from environment variables
   const finalConfig: ServerlessRedisConfig = {
     url: config.url || env.REDIS_PROXY_URL || '',
-    token: config.token || env.REDIS_TOKEN || env.REDIS_API_KEY || '',
+    token: config.token || env.REDIS_API_KEY || env.REDIS_TOKEN || '',
     timeout: config.timeout || (env.REDIS_TIMEOUT ? parseInt(env.REDIS_TIMEOUT) : 5000),
     retries: config.retries || (env.REDIS_RETRIES ? parseInt(env.REDIS_RETRIES) : 3),
     db: config.db || (env.REDIS_DB ? parseInt(env.REDIS_DB) : 0),

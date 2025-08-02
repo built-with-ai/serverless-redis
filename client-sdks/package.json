@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "jest --passWithNoTests",
+    "test": "jest --passWithNoTests --projects .",
     "test:watch": "jest --watch --passWithNoTests",
     "test:coverage": "jest --coverage --passWithNoTests",
     "test:integration": "jest --testPathPattern=integration --passWithNoTests",

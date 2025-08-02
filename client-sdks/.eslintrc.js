@@ -20,5 +20,13 @@ module.exports = {
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
   },
+  overrides: [
+    {
+      files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/*.spec.ts'],
+      env: {
+        jest: true,
+      },
+    },
+  ],
   ignorePatterns: ['dist/', 'node_modules/', '*.js'],
 };

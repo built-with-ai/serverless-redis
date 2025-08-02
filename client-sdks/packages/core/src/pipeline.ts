@@ -287,6 +287,13 @@ export class Pipeline {
   }
 
   /**
+   * Discard the pipeline (clear all commands)
+   */
+  discard(): void {
+    this.clear();
+  }
+
+  /**
    * Create a copy of this pipeline
    */
   clone(): Pipeline {
