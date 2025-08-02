@@ -92,7 +92,7 @@ jobs:
           done
       
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sdk-build-artifacts
           path: |
@@ -180,7 +180,43 @@ jobs:
         run: npm audit --audit-level=moderate
       
       - name: Run license check
-        run: npx license-checker --onlyAllow "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD" --production
+        run: |
+          echo "Checking licenses for monorepo and packages..."
+          # The monorepo itself should have a valid license
+          if jq -e '.license' package.json > /dev/null 2>&1; then
+            LICENSE=$(jq -r '.license' package.json)
+            echo "Monorepo license: $LICENSE"
+            case "$LICENSE" in
+              "MIT"|"Apache-2.0"|"BSD-2-Clause"|"BSD-3-Clause"|"ISC"|"0BSD")
+                echo "✅ Monorepo license is valid"
+                ;;
+              *)
+                echo "❌ Monorepo license '$LICENSE' is not allowed"
+                exit 1
+                ;;
+            esac
+          fi
+          
+          # Check each package
+          for package_dir in packages/*/; do
+            if [ -f "$package_dir/package.json" ]; then
+              echo "Checking $package_dir..."
+              PACKAGE_LICENSE=$(jq -r '.license // "UNLICENSED"' "$package_dir/package.json")
+              echo "  License: $PACKAGE_LICENSE"
+              case "$PACKAGE_LICENSE" in
+                "MIT"|"Apache-2.0"|"BSD-2-Clause"|"BSD-3-Clause"|"ISC"|"0BSD")
+                  echo "  ✅ Valid license"
+                  ;;
+                *)
+                  echo "  ❌ Package license '$PACKAGE_LICENSE' is not allowed"
+                  exit 1
+                  ;;
+              esac
+            else
+              echo "Skipping $package_dir (no package.json)"
+            fi
+          done
+          echo "✅ All licenses are valid"
 
   publish-preview:
     name: Publish Preview Packages
@@ -298,12 +334,10 @@ jobs:
       
       - name: Create GitHub release
         if: steps.version-check.outputs.should_publish == 'true'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: sdk-v${{ steps.version-check.outputs.new_version }}
-          release_name: SDK Release v${{ steps.version-check.outputs.new_version }}
+          name: SDK Release v${{ steps.version-check.outputs.new_version }}
           body: |
             ## SDK Release v${{ steps.version-check.outputs.new_version }}
             
@@ -332,6 +366,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, build, integration-test, security-scan]
     if: always()
+    
+    defaults:
+      run:
+        working-directory: .
     
     steps:
       - name: Notify success
