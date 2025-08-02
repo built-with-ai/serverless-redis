@@ -1,0 +1,61 @@
+server:
+  port: 8080
+  host: "0.0.0.0"
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 120s
+  http2:
+    enabled: true
+    max_concurrent_streams: 1000
+    max_frame_size: 1048576
+    max_header_list_size: 262144
+    idle_timeout: 120s
+    read_timeout: 30s
+    write_timeout: 30s
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+
+redis:
+  primary:
+    addr: "localhost:6379"
+    password: ""
+    db: 0
+    max_retries: 3
+    dial_timeout: 5s
+    read_timeout: 3s
+    write_timeout: 3s
+  
+  # Optional: DragonflyDB for high performance
+  dragonfly:
+    enabled: false
+    addr: "localhost:6380"
+    password: ""
+    db: 0
+
+pool:
+  min_idle_conns: 5
+  max_idle_conns: 100
+  max_active_conns: 1000
+  idle_timeout: 300s
+  max_conn_age: 3600s
+  pool_timeout: 4s
+
+auth:
+  enabled: true
+  jwt_secret: "your-jwt-secret-key-change-this"
+  api_keys:
+    - key: "test-api-key-12345"
+      tenant_id: "default"
+      rate_limit: 1000
+      allowed_dbs: [0, 1, 2]
+      permissions: ["*"]
+
+metrics:
+  enabled: true
+  path: "/metrics"
+  
+logging:
+  level: "info"
+  format: "json"

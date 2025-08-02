@@ -1,0 +1,349 @@
+name: SDK CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'client-sdks/**'
+      - '.github/workflows/sdk-ci.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'client-sdks/**'
+      - '.github/workflows/sdk-ci.yml'
+
+defaults:
+  run:
+    working-directory: client-sdks
+
+jobs:
+  test:
+    name: Test SDK Packages
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: client-sdks/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run type checking
+        run: npm run type-check
+      
+      - name: Run linting
+        run: npm run lint
+      
+      - name: Run unit tests
+        run: npm test -- --coverage --passWithNoTests
+        env:
+          CI: true
+      
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./client-sdks/coverage
+          flags: sdk-tests
+          name: sdk-coverage-${{ matrix.node-version }}
+
+  build:
+    name: Build SDK Packages
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: client-sdks/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Check build artifacts
+        run: |
+          for package in packages/*/; do
+            if [ -d "$package/dist" ]; then
+              echo "✅ $package built successfully"
+              ls -la "$package/dist/"
+            else
+              echo "❌ $package build failed - no dist directory"
+              exit 1
+            fi
+          done
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: sdk-build-artifacts
+          path: |
+            client-sdks/packages/*/dist/
+            client-sdks/packages/*/package.json
+          retention-days: 7
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: build
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: client-sdks/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Start Redis proxy server
+        run: |
+          cd ..
+          docker build -t redis-proxy .
+          docker run -d -p 8080:8080 \
+            -e REDIS_URLS=redis://localhost:6379 \
+            -e AUTH_ENABLED=true \
+            -e API_KEYS=test-api-key-123 \
+            --network host \
+            --name redis-proxy \
+            redis-proxy
+          
+          # Wait for proxy to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:8080/health; do sleep 1; done'
+      
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          REDIS_PROXY_URL: http://localhost:8080
+          REDIS_TOKEN: test-api-key-123
+          CI: true
+      
+      - name: Stop services
+        if: always()
+        run: |
+          docker stop redis-proxy || true
+          docker rm redis-proxy || true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: client-sdks/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run security audit
+        run: npm audit --audit-level=moderate
+      
+      - name: Run license check
+        run: npx license-checker --onlyAllow "MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;0BSD" --production
+
+  publish-preview:
+    name: Publish Preview Packages
+    runs-on: ubuntu-latest
+    needs: [test, build, integration-test, security-scan]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: client-sdks/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Update package versions for preview
+        run: |
+          PR_NUMBER=${{ github.event.number }}
+          COMMIT_SHA=${{ github.sha }}
+          SHORT_SHA=${COMMIT_SHA:0:7}
+          PREVIEW_VERSION="0.0.0-pr-${PR_NUMBER}-${SHORT_SHA}"
+          
+          for package in packages/*/package.json; do
+            jq --arg version "$PREVIEW_VERSION" '.version = $version' "$package" > tmp.json
+            mv tmp.json "$package"
+            echo "Updated $(dirname $package) to version $PREVIEW_VERSION"
+          done
+      
+      - name: Publish preview packages
+        run: |
+          for package_dir in packages/*/; do
+            cd "$package_dir"
+            npm publish --tag pr-preview --access public || echo "Failed to publish $(basename $package_dir)"
+            cd ../..
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-release:
+    name: Publish Release Packages
+    runs-on: ubuntu-latest
+    needs: [test, build, integration-test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          cache-dependency-path: client-sdks/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build packages
+        run: npm run build
+      
+      - name: Check if version changed
+        id: version-check
+        run: |
+          # Get the latest published version
+          PUBLISHED_VERSION=$(npm view @builtwithai/serverless-redis-client version 2>/dev/null || echo "0.0.0")
+          CURRENT_VERSION=$(jq -r '.version' packages/core/package.json)
+          
+          echo "Published version: $PUBLISHED_VERSION"
+          echo "Current version: $CURRENT_VERSION"
+          
+          if [ "$PUBLISHED_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "new_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Publish packages
+        if: steps.version-check.outputs.should_publish == 'true'
+        run: |
+          echo "Publishing version ${{ steps.version-check.outputs.new_version }}"
+          
+          # Publish packages in dependency order
+          packages_to_publish=(
+            "packages/core"
+            "packages/nextjs"
+            "packages/vercel"
+            "packages/cloudflare"
+            "packages/aws-lambda"
+          )
+          
+          for package_dir in "${packages_to_publish[@]}"; do
+            echo "Publishing $package_dir..."
+            cd "$package_dir"
+            npm publish --access public
+            cd ../..
+            echo "✅ Published $package_dir"
+          done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      
+      - name: Create GitHub release
+        if: steps.version-check.outputs.should_publish == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: sdk-v${{ steps.version-check.outputs.new_version }}
+          release_name: SDK Release v${{ steps.version-check.outputs.new_version }}
+          body: |
+            ## SDK Release v${{ steps.version-check.outputs.new_version }}
+            
+            ### Packages Published
+            - `@builtwithai/serverless-redis-client@${{ steps.version-check.outputs.new_version }}`
+            - `@builtwithai/serverless-redis-nextjs@${{ steps.version-check.outputs.new_version }}`
+            - `@builtwithai/serverless-redis-vercel@${{ steps.version-check.outputs.new_version }}`
+            - `@builtwithai/serverless-redis-cloudflare@${{ steps.version-check.outputs.new_version }}`
+            - `@builtwithai/serverless-redis-aws-lambda@${{ steps.version-check.outputs.new_version }}`
+            
+            ### Installation
+            ```bash
+            npm install @builtwithai/serverless-redis-client
+            npm install @builtwithai/serverless-redis-nextjs
+            npm install @builtwithai/serverless-redis-vercel
+            npm install @builtwithai/serverless-redis-cloudflare
+            npm install @builtwithai/serverless-redis-aws-lambda
+            ```
+            
+            See the [documentation](./client-sdks/README.md) for usage examples.
+          draft: false
+          prerelease: false
+
+  notify:
+    name: Notify Status
+    runs-on: ubuntu-latest
+    needs: [test, build, integration-test, security-scan]
+    if: always()
+    
+    steps:
+      - name: Notify success
+        if: needs.test.result == 'success' && needs.build.result == 'success' && needs.integration-test.result == 'success' && needs.security-scan.result == 'success'
+        run: echo "✅ All SDK CI checks passed!"
+      
+      - name: Notify failure
+        if: needs.test.result == 'failure' || needs.build.result == 'failure' || needs.integration-test.result == 'failure' || needs.security-scan.result == 'failure'
+        run: |
+          echo "❌ SDK CI checks failed:"
+          echo "  Test: ${{ needs.test.result }}"
+          echo "  Build: ${{ needs.build.result }}"
+          echo "  Integration: ${{ needs.integration-test.result }}"
+          echo "  Security: ${{ needs.security-scan.result }}"
+          exit 1

@@ -1,0 +1,45 @@
+{
+  "name": "serverless-redis-examples",
+  "version": "1.0.0",
+  "description": "Comprehensive examples for Serverless Redis Client SDKs",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Choose a specific example directory to run'",
+    "test": "jest",
+    "lint": "eslint --ext .ts,.js .",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf */dist */node_modules/.cache"
+  },
+  "keywords": [
+    "redis",
+    "serverless",
+    "examples",
+    "nextjs",
+    "vercel",
+    "cloudflare",
+    "aws-lambda",
+    "edge-computing"
+  ],
+  "author": "Scaler Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.50.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.5.0",
+    "prettier": "^3.0.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@builtwithai/serverless-redis-client": "^1.0.0",
+    "@builtwithai/serverless-redis-nextjs": "^1.0.0",
+    "@builtwithai/serverless-redis-vercel": "^1.0.0",
+    "@builtwithai/serverless-redis-cloudflare": "^1.0.0",
+    "@builtwithai/serverless-redis-aws-lambda": "^1.0.0"
+  }
+}

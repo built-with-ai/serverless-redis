@@ -1,0 +1,50 @@
+{
+  "name": "@builtwithai/serverless-redis-vercel",
+  "version": "1.0.0",
+  "description": "Vercel Edge Functions integration for Serverless Redis Client",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "vercel",
+    "edge-functions",
+    "redis",
+    "serverless",
+    "client"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/built-with-ai/serverless-redis.git",
+    "directory": "client-sdks/packages/vercel"
+  },
+  "license": "MIT",
+  "author": "Built with AI Team",
+  "dependencies": {
+    "@builtwithai/serverless-redis-client": "^1.0.0"
+  },
+  "peerDependencies": {
+    "@vercel/edge": ">=0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@vercel/edge": "^1.1.1",
+    "rollup": "^3.29.4",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "@builtwithai/serverless-redis-client",
+  "version": "1.0.0",
+  "description": "TypeScript client for Serverless Redis Proxy",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "redis",
+    "serverless",
+    "edge",
+    "http",
+    "client",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/built-with-ai/serverless-redis.git",
+    "directory": "client-sdks/packages/core"
+  },
+  "license": "MIT",
+  "author": "Built with AI Team",
+  "engines": {
+    "node": ">=16"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.5",
+    "jest": "^29.7.0",
+    "rollup": "^3.29.4",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
