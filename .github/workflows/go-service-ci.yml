@@ -2,31 +2,31 @@ name: Go Service CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - '*.go'
-      - 'go.mod'
-      - 'go.sum'
-      - 'cmd/**'
-      - 'internal/**'
-      - 'tests/**'
-      - 'Dockerfile'
-      - 'Makefile'
-      - 'config.yaml'
-      - '.github/workflows/go-service-ci.yml'
+      - "*.go"
+      - "go.mod"
+      - "go.sum"
+      - "cmd/**"
+      - "internal/**"
+      - "tests/**"
+      - "Dockerfile"
+      - "Makefile"
+      - "config.yaml"
+      - ".github/workflows/go-service-ci.yml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - '*.go'
-      - 'go.mod'
-      - 'go.sum'
-      - 'cmd/**'
-      - 'internal/**'
-      - 'tests/**'
-      - 'Dockerfile'
-      - 'Makefile'
-      - 'config.yaml'
-      - '.github/workflows/go-service-ci.yml'
+      - "*.go"
+      - "go.mod"
+      - "go.sum"
+      - "cmd/**"
+      - "internal/**"
+      - "tests/**"
+      - "Dockerfile"
+      - "Makefile"
+      - "config.yaml"
+      - ".github/workflows/go-service-ci.yml"
 
 defaults:
   run:
@@ -36,11 +36,11 @@ jobs:
   test:
     name: Test Go Service
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
-        go-version: [1.21.x, 1.22.x]
-    
+        go-version: [1.24.x]
+
     services:
       redis:
         image: redis:7-alpine
@@ -51,47 +51,47 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Go ${{ matrix.go-version }}
         uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
           cache: true
-      
+
       - name: Download dependencies
         run: go mod download
-      
+
       - name: Verify dependencies
         run: go mod verify
-      
+
       - name: Run go vet
         run: go vet ./...
-      
+
       - name: Install golangci-lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
           skip-cache: false
-      
+
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
         env:
           REDIS_URL: redis://localhost:6379
-      
+
       - name: Generate coverage report
         run: go tool cover -html=coverage.out -o coverage.html
-      
+
       - name: Upload coverage reports
         uses: codecov/codecov-action@v3
         with:
           file: ./coverage.out
           flags: go-service
           name: go-service-coverage-${{ matrix.go-version }}
-      
+
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -103,54 +103,54 @@ jobs:
     name: Build Go Service
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.21.x
           cache: true
-      
+
       - name: Download dependencies
         run: go mod download
-      
+
       - name: Build for multiple platforms
         run: |
           # Set version from git tag or commit
           VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev-$(git rev-parse --short HEAD)")
           echo "Building version: $VERSION"
-          
+
           # Build for different platforms
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
             -ldflags="-w -s -X main.Version=$VERSION" \
             -o dist/serverless-redis-linux-amd64 \
             ./cmd/server
-          
+
           CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build \
             -ldflags="-w -s -X main.Version=$VERSION" \
             -o dist/serverless-redis-darwin-amd64 \
             ./cmd/server
-          
+
           CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build \
             -ldflags="-w -s -X main.Version=$VERSION" \
             -o dist/serverless-redis-darwin-arm64 \
             ./cmd/server
-          
+
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build \
             -ldflags="-w -s -X main.Version=$VERSION" \
             -o dist/serverless-redis-windows-amd64.exe \
             ./cmd/server
-      
+
       - name: Create checksums
         run: |
           cd dist
           sha256sum * > checksums.txt
-      
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -163,16 +163,16 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Log in to GitHub Container Registry
         if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
@@ -180,7 +180,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
@@ -194,7 +194,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-      
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
@@ -213,7 +213,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker
     if: github.event_name != 'pull_request'
-    
+
     services:
       redis:
         image: redis:7-alpine
@@ -224,14 +224,14 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
+
       - name: Build test image
         uses: docker/build-push-action@v5
         with:
@@ -239,7 +239,7 @@ jobs:
           load: true
           tags: serverless-redis:test
           cache-from: type=gha
-      
+
       - name: Run service container
         run: |
           docker run -d \
@@ -250,40 +250,40 @@ jobs:
             -e API_KEYS=test-api-key-123 \
             -p 8080:8080 \
             serverless-redis:test
-      
+
       - name: Wait for service to be ready
         run: |
           timeout 30 bash -c 'until curl -f http://localhost:8080/health; do sleep 1; done'
-      
+
       - name: Run integration tests
         run: |
           # Test health endpoint
           curl -f http://localhost:8080/health
-          
+
           # Test metrics endpoint
           curl -f http://localhost:8080/metrics
-          
+
           # Test Redis operations
           curl -X POST http://localhost:8080/v1/command \
             -H "Authorization: Bearer test-api-key-123" \
             -H "Content-Type: application/json" \
             -d '{"command":"SET","args":["test","value"]}'
-          
+
           curl -X POST http://localhost:8080/v1/command \
             -H "Authorization: Bearer test-api-key-123" \
             -H "Content-Type: application/json" \
             -d '{"command":"GET","args":["test"]}'
-          
+
           # Test pipeline operations
           curl -X POST http://localhost:8080/v1/pipeline \
             -H "Authorization: Bearer test-api-key-123" \
             -H "Content-Type: application/json" \
             -d '{"commands":[{"command":"SET","args":["test2","value2"]},{"command":"GET","args":["test2"]}]}'
-      
+
       - name: Check service logs
         if: always()
         run: docker logs serverless-redis-test
-      
+
       - name: Stop service container
         if: always()
         run: docker stop serverless-redis-test && docker rm serverless-redis-test
@@ -291,39 +291,40 @@ jobs:
   security-scan:
     name: Security Scan
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: 1.21.x
           cache: true
-      
+
       - name: Run Gosec Security Scanner
-        uses: securecodewarrior/github-action-gosec@master
-        with:
-          args: './...'
-      
-      - name: Run Nancy vulnerability scanner
         run: |
-          go install github.com/sonatypecommunity/nancy@latest
-          go list -json -deps ./... | nancy sleuth
+          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
+          gosec ./...
+
+      - name: Run dependency vulnerability scan
+        run: |
+          # Use govulncheck (official Go vulnerability scanner)
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./...
 
   release:
     name: Create Release
     runs-on: ubuntu-latest
     needs: [test, build, docker, integration-test, security-scan]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: Check if should create release
         id: release-check
         run: |
@@ -331,11 +332,11 @@ jobs:
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           CURRENT_COMMIT=$(git rev-parse HEAD)
           TAG_COMMIT=$(git rev-list -n 1 $LATEST_TAG 2>/dev/null || echo "")
-          
+
           echo "Latest tag: $LATEST_TAG"
           echo "Current commit: $CURRENT_COMMIT"
           echo "Tag commit: $TAG_COMMIT"
-          
+
           if [ "$CURRENT_COMMIT" != "$TAG_COMMIT" ]; then
             # Generate new version
             VERSION=$(echo $LATEST_TAG | sed 's/v//' | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
@@ -347,14 +348,14 @@ jobs:
             echo "should_release=false" >> $GITHUB_OUTPUT
             echo "No new commits since last tag"
           fi
-      
+
       - name: Download build artifacts
         if: steps.release-check.outputs.should_release == 'true'
         uses: actions/download-artifact@v4
         with:
           name: go-service-binaries
           path: dist/
-      
+
       - name: Create GitHub release
         if: steps.release-check.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v1
@@ -363,24 +364,24 @@ jobs:
           name: Serverless Redis ${{ steps.release-check.outputs.new_tag }}
           body: |
             ## Serverless Redis ${{ steps.release-check.outputs.new_tag }}
-            
+
             ### 🚀 Features
             - High-performance HTTP-to-Redis proxy
             - JWT authentication support
             - Prometheus metrics
             - Docker container available
-            
+
             ### 📦 Downloads
             - **Linux (x64)**: `serverless-redis-linux-amd64`
             - **macOS (x64)**: `serverless-redis-darwin-amd64`
             - **macOS (ARM64)**: `serverless-redis-darwin-arm64`
             - **Windows (x64)**: `serverless-redis-windows-amd64.exe`
-            
+
             ### 🐳 Docker
             ```bash
             docker pull ghcr.io/${{ github.repository_owner }}/serverless-redis:${{ steps.release-check.outputs.new_tag }}
             ```
-            
+
             ### 📋 Installation
             ```bash
             # Download binary for your platform
@@ -388,7 +389,7 @@ jobs:
             chmod +x serverless-redis-linux-amd64
             ./serverless-redis-linux-amd64
             ```
-            
+
             See the [documentation](./README.md) for configuration and usage examples.
           files: |
             dist/*
@@ -400,16 +401,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, build, docker, security-scan]
     if: always()
-    
+
     defaults:
       run:
         working-directory: .
-    
+
     steps:
       - name: Notify success
         if: needs.test.result == 'success' && needs.build.result == 'success' && needs.docker.result == 'success' && needs.security-scan.result == 'success'
         run: echo "✅ All Go service CI checks passed!"
-      
+
       - name: Notify failure
         if: needs.test.result == 'failure' || needs.build.result == 'failure' || needs.docker.result == 'failure' || needs.security-scan.result == 'failure'
         run: |
