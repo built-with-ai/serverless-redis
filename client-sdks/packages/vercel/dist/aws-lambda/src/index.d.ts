@@ -29,15 +29,15 @@ export declare function resetServerlessRedis(): void;
 /**
  * API Gateway Lambda handler wrapper for Redis operations (v1)
  */
-export declare function withRedis<T = any>(handler: (_redis: ServerlessRedis, _event: APIGatewayProxyEvent, _context: Context) => Promise<APIGatewayProxyResult | T>): Handler<APIGatewayProxyEvent, APIGatewayProxyResult>;
+export declare function withRedis<T = any>(handler: (redis: ServerlessRedis, event: APIGatewayProxyEvent, context: Context) => Promise<APIGatewayProxyResult | T>): Handler<APIGatewayProxyEvent, APIGatewayProxyResult>;
 /**
  * API Gateway Lambda handler wrapper for Redis operations (v2)
  */
-export declare function withRedisV2<T = any>(handler: (_redis: ServerlessRedis, _event: APIGatewayProxyEventV2, _context: Context) => Promise<APIGatewayProxyResultV2 | T>): Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
+export declare function withRedisV2<T = any>(handler: (redis: ServerlessRedis, event: APIGatewayProxyEventV2, context: Context) => Promise<APIGatewayProxyResultV2 | T>): Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
 /**
  * Generic Lambda handler wrapper for any event type
  */
-export declare function withRedisGeneric<TEvent = any, TResult = any>(handler: (_redis: ServerlessRedis, _event: TEvent, _context: Context) => Promise<TResult>): Handler<TEvent, TResult>;
+export declare function withRedisGeneric<TEvent = any, TResult = any>(handler: (redis: ServerlessRedis, event: TEvent, context: Context) => Promise<TResult>): Handler<TEvent, TResult>;
 /**
  * Middleware for Lambda functions
  */

@@ -49,7 +49,7 @@ export function createServerlessRedis(config: LambdaRedisConfig = {}): Serverles
   const env = process.env as LambdaEnvironment;
   
   // Detect if running in Lambda environment
-  const isLambda = !!env.AWS_LAMBDA_RUNTIME_API;
+  const _isLambda = !!env.AWS_LAMBDA_RUNTIME_API;
   
   // Auto-detect configuration from environment variables
   const finalConfig: ServerlessRedisConfig = {
@@ -119,7 +119,7 @@ export function resetServerlessRedis(): void {
  * API Gateway Lambda handler wrapper for Redis operations (v1)
  */
 export function withRedis<T = any>(
-  handler: (redis: ServerlessRedis, event: APIGatewayProxyEvent, context: Context) => Promise<APIGatewayProxyResult | T>
+  handler: (_redis: ServerlessRedis, _event: APIGatewayProxyEvent, _context: Context) => Promise<APIGatewayProxyResult | T>
 ): Handler<APIGatewayProxyEvent, APIGatewayProxyResult> {
   return async (event: APIGatewayProxyEvent, context: Context): Promise<APIGatewayProxyResult> => {
     try {
@@ -164,7 +164,7 @@ export function withRedis<T = any>(
  * API Gateway Lambda handler wrapper for Redis operations (v2)
  */
 export function withRedisV2<T = any>(
-  handler: (redis: ServerlessRedis, event: APIGatewayProxyEventV2, context: Context) => Promise<APIGatewayProxyResultV2 | T>
+  handler: (_redis: ServerlessRedis, _event: APIGatewayProxyEventV2, _context: Context) => Promise<APIGatewayProxyResultV2 | T>
 ): Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2> {
   return async (event: APIGatewayProxyEventV2, context: Context): Promise<APIGatewayProxyResultV2> => {
     try {
@@ -209,7 +209,7 @@ export function withRedisV2<T = any>(
  * Generic Lambda handler wrapper for any event type
  */
 export function withRedisGeneric<TEvent = any, TResult = any>(
-  handler: (redis: ServerlessRedis, event: TEvent, context: Context) => Promise<TResult>
+  handler: (_redis: ServerlessRedis, _event: TEvent, _context: Context) => Promise<TResult>
 ): Handler<TEvent, TResult> {
   return async (event: TEvent, context: Context): Promise<TResult> => {
     const redis = getServerlessRedis();
