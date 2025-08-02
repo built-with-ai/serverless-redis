@@ -186,7 +186,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ghcr.io/${{ github.repository_owner }}/serverless-redis
+            ghcr.io/${{ github.repository }}
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -375,7 +375,7 @@ jobs:
 
             ### 🐳 Docker
             ```bash
-            docker pull ghcr.io/${{ github.repository_owner }}/serverless-redis:${{ steps.release-check.outputs.new_tag }}
+            docker pull ghcr.io/${{ github.repository }}:${{ steps.release-check.outputs.new_tag }}
             ```
 
             ### 📋 Installation
