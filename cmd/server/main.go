@@ -274,7 +274,7 @@ func (s *Server) handlePipeline(w http.ResponseWriter, r *http.Request) {
 		status := "success"
 		if results[i].Error != "" {
 			status = "error"
-			s.metrics.RecordRedisError(cmdReq.Command, getRedisErrorType(fmt.Errorf(results[i].Error)), tenant)
+			s.metrics.RecordRedisError(cmdReq.Command, getRedisErrorType(fmt.Errorf("%s", results[i].Error)), tenant)
 		}
 		s.metrics.RecordRedisCommand(cmdReq.Command, status, tenant, duration/time.Duration(len(req.Commands)))
 	}
