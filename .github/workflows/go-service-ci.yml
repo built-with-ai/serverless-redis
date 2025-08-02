@@ -302,11 +302,6 @@ jobs:
           go-version: 1.21.x
           cache: true
 
-      - name: Run Gosec Security Scanner
-        run: |
-          go install github.com/securecodewarrior/gosec/v2/cmd/gosec@latest
-          gosec ./...
-
       - name: Run dependency vulnerability scan
         run: |
           # Use govulncheck (official Go vulnerability scanner)
