@@ -13,7 +13,7 @@ func TestCompressionMiddleware(t *testing.T) {
 	// Create a test handler that returns JSON
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"message": "test response", "data": {"key": "value"}}`))
+		_, _ = w.Write([]byte(`{"message": "test response", "data": {"key": "value"}}`))
 	})
 
 	// Wrap with compression middleware
@@ -56,7 +56,7 @@ func TestCompressionMiddleware(t *testing.T) {
 func TestCompressionMiddlewareWithoutGzipSupport(t *testing.T) {
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"message": "test response"}`))
+		_, _ = w.Write([]byte(`{"message": "test response"}`))
 	})
 
 	handler := CompressionMiddleware(testHandler)
@@ -83,7 +83,7 @@ func TestCompressionMiddlewareWithoutGzipSupport(t *testing.T) {
 func TestContentEncodingMiddleware(t *testing.T) {
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"test": "data"}`))
+		_, _ = w.Write([]byte(`{"test": "data"}`))
 	})
 
 	handler := ContentEncodingMiddleware(testHandler)
@@ -184,7 +184,7 @@ func TestCompressionRatio(t *testing.T) {
 
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(largeData))
+		_, _ = w.Write([]byte(largeData))
 	})
 
 	handler := CompressionMiddleware(testHandler)

@@ -120,7 +120,9 @@ func ServerPushMiddleware(next http.Handler) http.Handler {
 					},
 				}
 				// Push metrics endpoint (non-blocking)
-				go pusher.Push("/metrics", pushOptions)
+				go func() {
+					_ = pusher.Push("/metrics", pushOptions)
+				}()
 			}
 		}
 		

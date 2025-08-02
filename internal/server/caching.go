@@ -179,7 +179,7 @@ func CachingMiddleware(cache *InMemoryCache) func(http.Handler) http.Handler {
 				w.Header().Set("X-Cache", "HIT")
 				w.Header().Set("X-Cache-Age", strconv.Itoa(int(time.Since(entry.Timestamp).Seconds())))
 				w.WriteHeader(entry.StatusCode)
-				w.Write(entry.Data)
+				_, _ = w.Write(entry.Data)
 				return
 			}
 			

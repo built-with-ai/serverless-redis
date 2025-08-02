@@ -211,7 +211,7 @@ func TestCachingMiddleware(t *testing.T) {
 		requestCount++
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"count": ` + string(rune(requestCount+48)) + `}`))
+		_, _ = w.Write([]byte(`{"count": ` + string(rune(requestCount+48)) + `}`))
 	})
 
 	handler := CachingMiddleware(cache)(testHandler)

@@ -274,7 +274,7 @@ func (ts *TestServer) handleCommand(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func (ts *TestServer) handlePipeline(w http.ResponseWriter, r *http.Request) {
@@ -293,7 +293,7 @@ func (ts *TestServer) handlePipeline(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 func (ts *TestServer) handleTransaction(w http.ResponseWriter, r *http.Request) {
@@ -310,7 +310,7 @@ func (ts *TestServer) handleTransaction(w http.ResponseWriter, r *http.Request) 
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 func (ts *TestServer) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -329,5 +329,5 @@ func (ts *TestServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(response)
 }

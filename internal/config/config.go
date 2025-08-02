@@ -44,7 +44,7 @@ func LoadConfig() (*types.Config, error) {
 
 func overrideWithEnv(config *types.Config) {
 	if port := os.Getenv("PORT"); port != "" {
-		fmt.Sscanf(port, "%d", &config.Server.Port)
+		_, _ = fmt.Sscanf(port, "%d", &config.Server.Port)
 	}
 	
 	if host := os.Getenv("HOST"); host != "" {

@@ -72,7 +72,7 @@ func (suite *E2ETestSuite) TeardownServer(t *testing.T) {
 		if err := suite.serverProcess.Process.Kill(); err != nil {
 			t.Errorf("Failed to kill server process: %v", err)
 		}
-		suite.serverProcess.Wait()
+		_ = suite.serverProcess.Wait()
 	}
 
 	// Clean up binary
