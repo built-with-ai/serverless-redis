@@ -1,9 +1,9 @@
 /**
  * Shared Rollup configuration for all SDK packages
  */
-import typescript from 'rollup-plugin-typescript2';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
+const typescript = require('rollup-plugin-typescript2');
+const { readFileSync } = require('fs');
+const { resolve } = require('path');
 
 // Get package.json for the current package
 const packageDir = process.cwd();
@@ -20,7 +20,7 @@ const external = [
   'react',
 ];
 
-export default [
+module.exports = [
   // ESM build
   {
     input: 'src/index.ts',
@@ -33,12 +33,24 @@ export default [
     plugins: [
       typescript({
         typescript: require('typescript'),
-        tsconfig: './tsconfig.json',
         tsconfigOverride: {
           compilerOptions: {
+            target: 'ES2020',
+            lib: ['ES2020', 'DOM'],
+            module: 'ESNext',
+            moduleResolution: 'node',
             declaration: false,
             declarationMap: false,
+            outDir: './dist',
+            strict: true,
+            esModuleInterop: true,
+            skipLibCheck: true,
+            forceConsistentCasingInFileNames: true,
+            resolveJsonModule: true,
+            allowSyntheticDefaultImports: true,
+            composite: false,
           },
+          exclude: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*'],
         },
       }),
     ],
@@ -56,13 +68,24 @@ export default [
     plugins: [
       typescript({
         typescript: require('typescript'),
-        tsconfig: './tsconfig.json',
         tsconfigOverride: {
           compilerOptions: {
+            target: 'ES2020',
+            lib: ['ES2020', 'DOM'],
+            module: 'ESNext',
+            moduleResolution: 'node',
             declaration: true,
             declarationMap: true,
             outDir: './dist',
+            strict: true,
+            esModuleInterop: true,
+            skipLibCheck: true,
+            forceConsistentCasingInFileNames: true,
+            resolveJsonModule: true,
+            allowSyntheticDefaultImports: true,
+            composite: false,
           },
+          exclude: ['**/*.test.ts', '**/*.spec.ts', '**/__tests__/**/*'],
         },
       }),
     ],

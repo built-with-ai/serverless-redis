@@ -1,3 +1,4 @@
 serverless-redis
 serverless-redis-optimized
 .claude
+node_modules

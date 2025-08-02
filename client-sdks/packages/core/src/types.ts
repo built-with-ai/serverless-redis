@@ -117,19 +117,14 @@ export interface PipelineCommand {
  */
 export type RequestInterceptor = (config: {
   url: string;
-  method: string;
+  method: HttpMethod;
   headers: Record<string, string>;
-  body?: string;
-}) => {
+  body: string | undefined;
+}) => Promise<{
   url: string;
-  method: string;
+  method: HttpMethod;
   headers: Record<string, string>;
-  body?: string;
-} | Promise<{
-  url: string;
-  method: string;
-  headers: Record<string, string>;
-  body?: string;
+  body: string | undefined;
 }>;
 
 /**

@@ -61,4 +61,4 @@ export {
 } from './utils';
 
 // Default export for convenience
-export default ServerlessRedis;
+export { ServerlessRedis as default } from './client';

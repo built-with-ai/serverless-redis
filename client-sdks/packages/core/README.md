@@ -1,17 +1,21 @@
-# @scaler/serverless-redis-client
+# @builtwithai/serverless-redis-client
+
+[![NPM Version](https://img.shields.io/npm/v/@builtwithai/serverless-redis-client)](https://www.npmjs.com/package/@builtwithai/serverless-redis-client)
+[![NPM Downloads](https://img.shields.io/npm/dm/@builtwithai/serverless-redis-client)](https://www.npmjs.com/package/@builtwithai/serverless-redis-client)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
 
 TypeScript client library for the Serverless Redis Proxy, providing a familiar Redis-like API optimized for serverless and edge computing environments.
 
 ## Installation
 
 ```bash
-npm install @scaler/serverless-redis-client
+npm install @builtwithai/serverless-redis-client
 ```
 
 ## Quick Start
 
 ```typescript
-import { ServerlessRedis } from '@scaler/serverless-redis-client';
+import { ServerlessRedis } from '@builtwithai/serverless-redis-client';
 
 const redis = new ServerlessRedis({
   url: 'https://your-proxy.example.com',
@@ -208,7 +212,7 @@ import {
   AuthenticationError,
   TimeoutError,
   ValidationError 
-} from '@scaler/serverless-redis-client';
+} from '@builtwithai/serverless-redis-client';
 
 try {
   await redis.get('key');
@@ -233,7 +237,7 @@ import type {
   RedisValue,
   RedisKey,
   HealthResponse 
-} from '@scaler/serverless-redis-client';
+} from '@builtwithai/serverless-redis-client';
 
 const config: ServerlessRedisConfig = {
   url: 'https://your-proxy.example.com',

@@ -215,74 +215,68 @@ curl http://localhost:8080/metrics
 # redis_proxy_memory_usage_bytes
 ```
 
-## 🚀 Serverless Integration
+## 📦 Client SDKs 
 
-### Next.js (Vercel)
+We provide official TypeScript/JavaScript client libraries for seamless integration:
+
+### Core Client
+```bash
+npm install @builtwithai/serverless-redis-client
+```
+
 ```typescript
-// lib/redis.ts
-class ServerlessRedis {
-  private baseURL: string;
-  private apiKey: string;
+import { ServerlessRedis } from '@builtwithai/serverless-redis-client';
 
-  constructor(baseURL: string, apiKey: string) {
-    this.baseURL = baseURL;
-    this.apiKey = apiKey;
-  }
+const redis = new ServerlessRedis({
+  url: 'https://your-proxy.example.com',
+  token: 'your-api-key'
+});
 
-  async set(key: string, value: string): Promise<string> {
-    const response = await fetch(`${this.baseURL}/v1/command`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        command: 'SET',
-        args: [key, value]
-      })
-    });
-    
-    const data = await response.json();
-    return data.result;
-  }
+// Redis-like API
+await redis.set('key', 'value');
+const value = await redis.get('key');
 
-  async get(key: string): Promise<string | null> {
-    const response = await fetch(`${this.baseURL}/v1/command`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        command: 'GET',
-        args: [key]
-      })
-    });
-    
-    const data = await response.json();
-    return data.result;
-  }
+// Pipeline operations
+const results = await redis.pipeline()
+  .set('key1', 'value1')
+  .get('key1')
+  .exec();
+```
 
-  async pipeline(commands: Array<{command: string, args: any[]}>): Promise<any[]> {
-    const response = await fetch(`${this.baseURL}/v1/pipeline`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ commands })
-    });
-    
-    const data = await response.json();
-    return data.results.map((r: any) => r.result);
-  }
-}
+### Client SDK Features
 
-// Usage in API route
-const redis = new ServerlessRedis(
-  process.env.REDIS_PROXY_URL!,
-  process.env.REDIS_API_KEY!
-);
+- **🚀 Redis-like API** - Familiar interface for Redis developers
+- **📦 Zero Dependencies** - Minimal bundle size for serverless environments  
+- **🔧 TypeScript First** - Full type safety and excellent IntelliSense
+- **⚡ Edge Optimized** - Works in all serverless and edge runtimes
+- **🔄 Pipeline Support** - Batch multiple operations efficiently
+- **🛡️ Error Handling** - Proper Redis error semantics over HTTP
+- **🔌 Framework Integration** - Purpose-built integrations for popular platforms
+
+### All Available Packages
+
+| Package                                                                                                            | Version                                                                       | Description                                |
+| ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------ |
+| [@builtwithai/serverless-redis-client](https://www.npmjs.com/package/@builtwithai/serverless-redis-client)         | ![npm](https://img.shields.io/npm/v/@builtwithai/serverless-redis-client)     | Core TypeScript client with Redis-like API |
+| [@builtwithai/serverless-redis-nextjs](https://www.npmjs.com/package/@builtwithai/serverless-redis-nextjs)         | ![npm](https://img.shields.io/npm/v/@builtwithai/serverless-redis-nextjs)     | Next.js integration utilities              |
+| [@builtwithai/serverless-redis-vercel](https://www.npmjs.com/package/@builtwithai/serverless-redis-vercel)         | ![npm](https://img.shields.io/npm/v/@builtwithai/serverless-redis-vercel)     | Vercel Edge Functions support              |
+| [@builtwithai/serverless-redis-cloudflare](https://www.npmjs.com/package/@builtwithai/serverless-redis-cloudflare) | ![npm](https://img.shields.io/npm/v/@builtwithai/serverless-redis-cloudflare) | Cloudflare Workers utilities               |
+| [@builtwithai/serverless-redis-aws-lambda](https://www.npmjs.com/package/@builtwithai/serverless-redis-aws-lambda) | ![npm](https://img.shields.io/npm/v/@builtwithai/serverless-redis-aws-lambda) | AWS Lambda integration                     |
+
+### Framework-Specific Packages
+
+#### Next.js Integration
+```bash
+npm install @builtwithai/serverless-redis-nextjs
+```
+
+```typescript
+import { createServerlessRedis } from '@builtwithai/serverless-redis-nextjs';
+
+const redis = createServerlessRedis({
+  url: process.env.REDIS_PROXY_URL,
+  token: process.env.REDIS_API_KEY
+});
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await redis.set('user:123', JSON.stringify({ name: 'John' }));
@@ -291,52 +285,78 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 }
 ```
 
-### AWS Lambda
-```python
-import json
-import requests
-import os
-
-class ServerlessRedis:
-    def __init__(self, base_url, api_key):
-        self.base_url = base_url
-        self.api_key = api_key
-        self.headers = {
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json'
-        }
-    
-    def execute_command(self, command, args):
-        response = requests.post(
-            f'{self.base_url}/v1/command',
-            headers=self.headers,
-            json={'command': command, 'args': args}
-        )
-        return response.json()['result']
-    
-    def pipeline(self, commands):
-        response = requests.post(
-            f'{self.base_url}/v1/pipeline',
-            headers=self.headers,
-            json={'commands': commands}
-        )
-        return [r['result'] for r in response.json()['results']]
-
-def lambda_handler(event, context):
-    redis = ServerlessRedis(
-        os.environ['REDIS_PROXY_URL'],
-        os.environ['REDIS_API_KEY']
-    )
-    
-    # Use Redis
-    redis.execute_command('SET', ['key', 'value'])
-    value = redis.execute_command('GET', ['key'])
-    
-    return {
-        'statusCode': 200,
-        'body': json.dumps({'value': value})
-    }
+#### AWS Lambda Integration
+```bash
+npm install @builtwithai/serverless-redis-aws-lambda
 ```
+
+```typescript
+import { createLambdaRedis } from '@builtwithai/serverless-redis-aws-lambda';
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+
+const redis = createLambdaRedis({
+  url: process.env.REDIS_PROXY_URL!,
+  token: process.env.REDIS_API_KEY!
+});
+
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+  // Use Redis
+  await redis.set('key', 'value');
+  const value = await redis.get('key');
+  
+  return {
+    statusCode: 200,
+    body: JSON.stringify({ value })
+  };
+};
+```
+
+#### Vercel Edge Functions
+```bash
+npm install @builtwithai/serverless-redis-vercel
+```
+
+```typescript
+import { createVercelRedis } from '@builtwithai/serverless-redis-vercel';
+
+const redis = createVercelRedis({
+  url: process.env.REDIS_PROXY_URL!,
+  token: process.env.REDIS_API_KEY!
+});
+
+export default async function handler(request: Request) {
+  await redis.set('edge-key', 'edge-value');
+  const value = await redis.get('edge-key');
+  
+  return new Response(JSON.stringify({ value }), {
+    headers: { 'content-type': 'application/json' }
+  });
+}
+```
+
+#### Cloudflare Workers
+```bash
+npm install @builtwithai/serverless-redis-cloudflare
+```
+
+```typescript
+import { createWorkerRedis } from '@builtwithai/serverless-redis-cloudflare';
+
+const redis = createWorkerRedis({
+  url: 'https://your-proxy.example.com',
+  token: 'your-api-key'
+});
+
+export default {
+  async fetch(request: Request, env: any): Promise<Response> {
+    await redis.set('worker-key', 'worker-value');
+    const value = await redis.get('worker-key');
+    
+    return new Response(JSON.stringify({ value }), {
+      headers: { 'content-type': 'application/json' }
+    });
+  }
+};
 
 ## 🔧 Development
 
@@ -418,12 +438,3 @@ services:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
-
-- 📖 [Documentation](https://github.com/scaler/serverless-redis/wiki)
-- 🐛 [Issues](https://github.com/scaler/serverless-redis/issues)
-- 💬 [Discussions](https://github.com/scaler/serverless-redis/discussions)
-
----
-
-**Built with ❤️ for the serverless community**

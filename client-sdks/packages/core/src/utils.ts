@@ -170,19 +170,19 @@ export class HttpClient {
     // Prepare request config
     let requestConfig = {
       url,
-      method,
+      method: method as HttpMethod,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': this.config.token,
         'User-Agent': 'serverless-redis-client/1.0.0',
         ...this.config.headers,
-      },
+      } as Record<string, string>,
       body: data ? JSON.stringify(data) : undefined,
     };
 
     // Apply compression header
     if (this.config.compression !== false) {
-      requestConfig.headers['Accept-Encoding'] = 'gzip, deflate';
+      (requestConfig.headers as Record<string, string>)['Accept-Encoding'] = 'gzip, deflate';
     }
 
     // Apply request interceptors
@@ -216,9 +216,14 @@ export class HttpClient {
       }
 
       // Prepare response object
+      const headerEntries: [string, string][] = [];
+      response.headers.forEach((value, key) => {
+        headerEntries.push([key, value]);
+      });
+      
       let responseObj = {
         status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
+        headers: Object.fromEntries(headerEntries),
         data: responseData,
       };
 

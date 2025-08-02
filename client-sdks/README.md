@@ -2,28 +2,44 @@
 
 TypeScript/JavaScript client libraries for the Serverless Redis Proxy, optimized for serverless and edge computing environments.
 
-## Packages
+## 📦 Published Packages
 
-### Core Packages
+All packages are available on NPM under the `@builtwithai` organization:
 
-- **[@scaler/serverless-redis-client](./packages/core/)** - Core TypeScript client with Redis-like API
-- **[@scaler/serverless-redis-nextjs](./packages/nextjs/)** - Next.js integration utilities
-- **[@scaler/serverless-redis-vercel](./packages/vercel/)** - Vercel Edge Functions support
-- **[@scaler/serverless-redis-cloudflare](./packages/cloudflare/)** - Cloudflare Workers utilities
-- **[@scaler/serverless-redis-aws](./packages/aws-lambda/)** - AWS Lambda integration
+### Core Package
+
+- **[@builtwithai/serverless-redis-client](https://www.npmjs.com/package/@builtwithai/serverless-redis-client)** - Core TypeScript client with Redis-like API
+
+### Framework-Specific Packages
+
+- **[@builtwithai/serverless-redis-nextjs](https://www.npmjs.com/package/@builtwithai/serverless-redis-nextjs)** - Next.js integration utilities
+- **[@builtwithai/serverless-redis-vercel](https://www.npmjs.com/package/@builtwithai/serverless-redis-vercel)** - Vercel Edge Functions support  
+- **[@builtwithai/serverless-redis-cloudflare](https://www.npmjs.com/package/@builtwithai/serverless-redis-cloudflare)** - Cloudflare Workers utilities
+- **[@builtwithai/serverless-redis-aws-lambda](https://www.npmjs.com/package/@builtwithai/serverless-redis-aws-lambda)** - AWS Lambda integration
 
 ### Examples
 
 - **[examples](./packages/examples/)** - Complete usage examples for all platforms
 
-## Quick Start
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
-npm install @scaler/serverless-redis-client
+# Core client
+npm install @builtwithai/serverless-redis-client
+
+# Or framework-specific packages
+npm install @builtwithai/serverless-redis-nextjs
+npm install @builtwithai/serverless-redis-vercel  
+npm install @builtwithai/serverless-redis-cloudflare
+npm install @builtwithai/serverless-redis-aws-lambda
 ```
 
+### Basic Usage
+
 ```typescript
-import { ServerlessRedis } from '@scaler/serverless-redis-client';
+import { ServerlessRedis } from '@builtwithai/serverless-redis-client';
 
 const redis = new ServerlessRedis({
   url: 'https://your-proxy.example.com',
@@ -39,6 +55,48 @@ const results = await redis.pipeline()
   .set('key1', 'value1')
   .get('key1')
   .exec();
+```
+
+### Framework-Specific Usage
+
+#### Next.js
+```typescript
+import { createServerlessRedis } from '@builtwithai/serverless-redis-nextjs';
+
+const redis = createServerlessRedis({
+  url: process.env.REDIS_PROXY_URL,
+  token: process.env.REDIS_API_KEY
+});
+```
+
+#### Vercel Edge Functions
+```typescript
+import { createVercelRedis } from '@builtwithai/serverless-redis-vercel';
+
+const redis = createVercelRedis({
+  url: process.env.REDIS_PROXY_URL,
+  token: process.env.REDIS_API_KEY
+});
+```
+
+#### Cloudflare Workers
+```typescript
+import { createWorkerRedis } from '@builtwithai/serverless-redis-cloudflare';
+
+const redis = createWorkerRedis({
+  url: 'https://your-proxy.example.com',
+  token: 'your-api-key'
+});
+```
+
+#### AWS Lambda
+```typescript
+import { createLambdaRedis } from '@builtwithai/serverless-redis-aws-lambda';
+
+const redis = createLambdaRedis({
+  url: process.env.REDIS_PROXY_URL,
+  token: process.env.REDIS_API_KEY
+});
 ```
 
 ## Features

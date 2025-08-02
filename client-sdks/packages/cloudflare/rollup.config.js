@@ -1,2 +1,2 @@
-import config from '../../rollup.config.js';
-export default config;
+const config = require('../../rollup.config.js');
+module.exports = config;
